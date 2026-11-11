@@ -23,6 +23,22 @@ npm install     # 安装 Electron 28 并自动复制 marked / DOMPurify、生成
 npm start
 ```
 
+### 安装为独立应用（推荐日常使用）
+
+```bash
+./scripts/package.sh
+```
+
+会把应用打包成自包含目录并注册到开始菜单，之后不需要 `npm start`：
+
+- `~/.local/opt/memo-overlay/`：Electron 运行时 + 应用资源（约 253MB）
+- `~/.local/bin/memo-overlay`：ELF 启动器（自动补 `--no-sandbox`），在 PATH 里可直接运行
+- `~/.local/share/applications/memo-overlay.desktop`：开始菜单入口，搜索「速记」或「memo」即可启动
+
+修改代码后重新执行一次 `./scripts/package.sh` 即可更新安装。`PREFIX=/path` 可以改安装前缀（要求 `bin` 与 `opt` 同级）。
+
+> 这是按用户安装（无需 root）。如果要装到 `/usr` / `/opt` 供所有用户使用，建议再打一个 `.deb` 后用 `sudo dpkg -i` 安装。
+
 > 说明：在 UOS / Debian 10（glibc 2.28）环境下使用 Electron 28；启动脚本带 `--no-sandbox`，因为 npm 安装的 `chrome-sandbox` 默认没有 setuid 权限。若想启用 Chromium 沙箱：
 >
 > ```bash
@@ -95,11 +111,15 @@ npm start
 
 ## 桌面图标
 
+日常使用推荐上面的 `./scripts/package.sh`，它会安装独立应用并注册开始菜单。
+
+如果只想给当前源码目录建一个开发用菜单入口：
+
 ```bash
 ./scripts/install-desktop.sh
 ```
 
-会在 `~/.local/share/applications/memo-overlay.desktop` 写入启动器（含绝对路径），之后可在应用菜单中搜索「速记」。
+会在 `~/.local/share/applications/memo-overlay.desktop` 写入指向 `scripts/run.sh` 的启动器。
 
 ## 目录结构
 
@@ -117,7 +137,9 @@ memo-overlay/
     ├── make-icons.js       # 纯 Node 绘制 PNG 图标
     ├── vendor.js           # 复制浏览器端依赖
     ├── run.sh              # 本地启动脚本
-    └── install-desktop.sh  # 安装 .desktop 启动器
+    ├── launcher.c          # 独立应用的 ELF 启动器
+    ├── package.sh          # 打包为自包含应用并注册开始菜单
+    └── install-desktop.sh  # 开发用 .desktop 启动器
 ```
 
 ## 开发说明
@@ -129,7 +151,7 @@ memo-overlay/
 
 ## 可选打包
 
-如需要独立安装包，可自行安装 `electron-builder`：
+日常安装用 `./scripts/package.sh` 就够了。如果需要 .deb / AppImage，也可以自行安装 `electron-builder`：
 
 ```bash
 npm i -D electron-builder
