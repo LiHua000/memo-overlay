@@ -187,9 +187,26 @@ function boundsUsable(bounds) {
   });
 }
 
+function insetFromEdges(bounds, margin = 40) {
+  const wa = screen.getDisplayMatching(bounds).workArea;
+  let { x, y, width, height } = bounds;
+
+  if (x <= wa.x + EDGE_TRIGGER) x = wa.x + margin;
+  if (x + width >= wa.x + wa.width - EDGE_TRIGGER) x = wa.x + wa.width - width - margin;
+  if (y <= wa.y + EDGE_TRIGGER) y = wa.y + margin;
+  if (y + height >= wa.y + wa.height - EDGE_TRIGGER) y = wa.y + wa.height - height - margin;
+
+  return { x, y, width, height };
+}
+
 function initialBounds() {
   if (boundsUsable(settings.bounds)) {
-    return { ...settings.bounds, width: Math.max(settings.bounds.width, MIN_W), height: Math.max(settings.bounds.height, MIN_H) };
+    // 如果上次停在屏幕边缘，向内挪一点，避免启动即触发贴边收起
+    return insetFromEdges({
+      ...settings.bounds,
+      width: Math.max(settings.bounds.width, MIN_W),
+      height: Math.max(settings.bounds.height, MIN_H),
+    });
   }
   const wa = screen.getPrimaryDisplay().workArea;
   const width = 420;
@@ -204,6 +221,8 @@ function initialBounds() {
 
 function createWindow() {
   const bounds = initialBounds();
+  // 启动后短时间内忽略 move 事件，避免窗口管理器落位时误触发贴边
+  engine.suppressUntil = Date.now() + 1500;
 
   win = new BrowserWindow({
     x: bounds.x,
