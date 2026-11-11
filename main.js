@@ -75,6 +75,9 @@ const engine = {
   pollTimer: null,
   suppressUntil: 0,
   hoverArmed: false,
+  // 从贴边状态探出后，鼠标离开时缩回原来那一侧
+  peekSide: null,
+  fromHover: false,
 };
 
 // 自绘拖拽状态：绕开窗口管理器的“拖到边缘分屏/贴边”行为
@@ -365,6 +368,8 @@ function showWindow() {
 
 function hideWindow() {
   if (!win || win.isDestroyed()) return;
+  engine.peekSide = null;
+  engine.fromHover = false;
   persistBounds();
   win.hide();
   refreshTray();
@@ -469,6 +474,8 @@ function collapseToEdge(side) {
 
   engine.collapsed = true;
   engine.side = side;
+  engine.peekSide = null;
+  engine.fromHover = false;
   engine.strip = strip;
   engine.restoreBounds = { ...b };
   engine.suppressUntil = Date.now() + 700;
@@ -488,32 +495,42 @@ function collapseToEdge(side) {
   refreshTray();
 }
 
-function expandFromEdge(focus = true) {
+function expandFromEdge(focus = true, fromHover = false) {
   if (!win || win.isDestroyed() || !engine.collapsed) return;
 
+  const side = engine.side;
   const restore = engine.restoreBounds && boundsUsable(engine.restoreBounds)
     ? engine.restoreBounds
     : initialBounds();
-  const wa = screen.getDisplayMatching(restore).workArea;
+  const wa = screen.getDisplayMatching(engine.strip || restore).workArea;
+  const width = Math.max(restore.width, MIN_W);
+  const height = Math.max(restore.height, MIN_H);
+
+  const bounds = {
+    width,
+    height,
+    x: clamp(restore.x, wa.x, wa.x + wa.width - width),
+    y: clamp(restore.y, wa.y, wa.y + wa.height - height),
+  };
+
+  // 贴着原边缘展开，保证鼠标还停在窗口范围内（QQ 式的“从边上滑出来”）
+  if (side === 'left') bounds.x = wa.x;
+  if (side === 'right') bounds.x = wa.x + wa.width - width;
+  if (side === 'top') bounds.y = wa.y;
+  if (side === 'bottom') bounds.y = wa.y + wa.height - height;
 
   engine.collapsed = false;
   engine.side = null;
   engine.strip = null;
+  engine.peekSide = side;
+  engine.fromHover = fromHover;
   engine.suppressUntil = Date.now() + 900;
   stopEdgePolling();
 
   win.setResizable(true);
   win.setMinimumSize(MIN_W, MIN_H);
   win.setSkipTaskbar(false);
-  win.setBounds(
-    {
-      x: clamp(restore.x, wa.x, wa.x + wa.width - Math.max(restore.width, MIN_W)),
-      y: clamp(restore.y, wa.y, wa.y + wa.height - Math.max(restore.height, MIN_H)),
-      width: Math.max(restore.width, MIN_W),
-      height: Math.max(restore.height, MIN_H),
-    },
-    false,
-  );
+  win.setBounds(bounds, false);
   win.setAlwaysOnTop(settings.alwaysOnTop, 'screen-saver');
   if (!win.isVisible()) win.show();
   if (focus) {
@@ -523,14 +540,26 @@ function expandFromEdge(focus = true) {
     win.webContents.send('app:focus-editor');
   }
 
+  const cursor = screen.getCursorScreenPoint();
+  const cursorInside =
+    cursor.x >= bounds.x && cursor.x < bounds.x + bounds.width &&
+    cursor.y >= bounds.y && cursor.y < bounds.y + bounds.height;
+
   persistBounds();
-  sendEdgeState();
+  sendEdgeState({ cursorInside });
   refreshTray();
 }
 
-function sendEdgeState() {
+function sendEdgeState(extra = {}) {
   if (win && !win.isDestroyed()) {
-    win.webContents.send('edge:state', { collapsed: engine.collapsed, side: engine.side });
+    win.webContents.send('edge:state', {
+      collapsed: engine.collapsed,
+      side: engine.side,
+      peek: !engine.collapsed && Boolean(engine.peekSide),
+      peekSide: engine.peekSide,
+      hover: engine.fromHover,
+      ...extra,
+    });
   }
 }
 
@@ -553,7 +582,7 @@ function startEdgePolling() {
       engine.hoverArmed = true;
       return;
     }
-    if (engine.hoverArmed) expandFromEdge(true);
+    if (engine.hoverArmed) expandFromEdge(true, true);
   }, 120);
 }
 
@@ -792,7 +821,14 @@ function registerIpc() {
     collapseToEdge(nearestEdge());
   });
   ipcMain.on('window:expand', () => {
-    if (engine.hoverArmed) expandFromEdge(true);
+    if (engine.hoverArmed) expandFromEdge(true, true);
+  });
+  ipcMain.on('window:collapse-back', () => {
+    if (!win || win.isDestroyed() || engine.collapsed) return;
+    if (!settings.edgeHide) return;
+    const side = engine.peekSide;
+    if (!side) return;
+    collapseToEdge(side);
   });
   ipcMain.on('window:resize-by', (_event, delta) => {
     if (!win || win.isDestroyed() || engine.collapsed || !delta) return;
@@ -820,6 +856,9 @@ function registerIpc() {
     drag.active = true;
     drag.offsetX = x - b.x;
     drag.offsetY = y - b.y;
+    // 用户主动挪窗口，就不再自动缩回边缘
+    engine.peekSide = null;
+    engine.fromHover = false;
     clearTimeout(moveTimer);
     armDragWatchdog();
   });

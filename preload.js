@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('memo', {
   hide: () => ipcRenderer.send('window:hide'),
   activate: () => ipcRenderer.send('window:activate'),
   collapse: () => ipcRenderer.send('window:collapse'),
+  collapseBack: () => ipcRenderer.send('window:collapse-back'),
   expand: () => ipcRenderer.send('window:expand'),
   resizeBy: (dx, dy) => ipcRenderer.send('window:resize-by', { dx, dy }),
   dragStart: (x, y) => ipcRenderer.send('window:drag-start', { x, y }),

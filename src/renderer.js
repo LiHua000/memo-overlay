@@ -43,6 +43,9 @@
     lastSavedAt: 0,
     settingsOpen: false,
     recording: false,
+    peek: false,
+    peekInside: false,
+    peekTimer: null,
     editCaret: [0, 0],
     editScroll: 0,
   };
@@ -102,6 +105,30 @@
   function hideToast() {
     clearTimeout(toastTimer);
     toastEl.hidden = true;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* 贴边探出：鼠标离开后缩回                                          */
+  /* ---------------------------------------------------------------- */
+
+  function clearPeekTimer() {
+    clearTimeout(state.peekTimer);
+    state.peekTimer = null;
+  }
+
+  function schedulePeekCollapse(delay = 800) {
+    if (!state.peek || !state.peekInside) return;
+    clearTimeout(state.peekTimer);
+    state.peekTimer = setTimeout(() => {
+      state.peekTimer = null;
+      if (!state.peek) return;
+      window.memo.collapseBack();
+    }, delay);
+  }
+
+  function postponePeekCollapse() {
+    if (!state.peekTimer) return;
+    schedulePeekCollapse(900);
   }
 
   /* ---------------------------------------------------------------- */
@@ -653,6 +680,10 @@
       if (document.body.classList.contains('edge-collapsed')) return;
 
       event.preventDefault();
+      // 主动拖窗口时取消“离开自动缩回”
+      state.peek = false;
+      state.peekInside = false;
+      clearPeekTimer();
       const start = { x: event.screenX, y: event.screenY };
       let last = { x: start.x, y: start.y };
       let started = false;
@@ -716,6 +747,7 @@
     editor.addEventListener('input', () => {
       state.dirty = true;
       state.cleared = false;
+      postponePeekCollapse();
       updateCounts();
       refreshStatus();
       scheduleSave();
@@ -771,6 +803,7 @@
 
     window.addEventListener('keydown', (event) => {
       if (state.recording || event.defaultPrevented) return;
+      postponePeekCollapse();
 
       const mod = event.ctrlKey || event.metaKey;
       if (mod && !event.altKey && !event.shiftKey && (event.key === 'e' || event.key === 'E')) {
@@ -875,6 +908,9 @@
     resizeHandle.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
       event.preventDefault();
+      state.peek = false;
+      state.peekInside = false;
+      clearPeekTimer();
       resizeHandle.setPointerCapture(event.pointerId);
       let lastX = event.screenX;
       let lastY = event.screenY;
@@ -905,10 +941,29 @@
       if (document.body.classList.contains('edge-collapsed')) window.memo.expand();
     });
 
+    // 从贴边探出后：鼠标离开窗口就缩回；期间继续输入则延后
+    document.documentElement.addEventListener('pointermove', () => {
+      if (!state.peek) return;
+      state.peekInside = true;
+      clearPeekTimer();
+    });
+    document.documentElement.addEventListener('pointerenter', () => {
+      if (!state.peek) return;
+      state.peekInside = true;
+      clearPeekTimer();
+    });
+    document.documentElement.addEventListener('pointerleave', () => {
+      if (!state.peek || !state.peekInside) return;
+      schedulePeekCollapse();
+    });
+
     window.memo.onEdgeState((edgeState) => {
       const collapsed = Boolean(edgeState && edgeState.collapsed);
       document.body.classList.toggle('edge-collapsed', collapsed);
       if (collapsed) {
+        state.peek = false;
+        state.peekInside = false;
+        clearPeekTimer();
         document.body.dataset.edge = (edgeState && edgeState.side) || '';
         if (state.settingsOpen) {
           state.settingsOpen = false;
@@ -918,6 +973,9 @@
         flushSave();
       } else {
         delete document.body.dataset.edge;
+        state.peek = Boolean(edgeState && edgeState.peek);
+        state.peekInside = state.peek && Boolean(edgeState && (edgeState.hover || edgeState.cursorInside));
+        clearPeekTimer();
       }
     });
 
