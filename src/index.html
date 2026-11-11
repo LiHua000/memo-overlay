@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data: https:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+  <meta name="color-scheme" content="dark">
+  <title>速记</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="booting">
+  <div class="app" id="app">
+    <header class="titlebar" id="titlebar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">速记</span>
+        <span class="brand-hint" id="brand-hint">Ctrl + Alt + M</span>
+      </div>
+      <div class="titlebar-actions">
+        <button class="icon-btn" id="btn-pin" type="button" title="始终置顶" aria-label="始终置顶">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 3h6l-1 6 3.5 3.5V14H6.5v-1.5L10 9 9 3z"/>
+            <path d="M12 14v7"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-settings" type="button" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-edge" type="button" title="贴边收起" aria-label="贴边收起">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 5.5 8 12l6.5 6.5"/>
+          </svg>
+        </button>
+        <span class="divider" aria-hidden="true"></span>
+        <button class="icon-btn danger" id="btn-clear" type="button" title="一键清空（可撤销）" aria-label="清空">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M8 6V4h8v2"/>
+            <path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v5M14 11v5"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="btn-hide" type="button" title="隐藏（Esc）" aria-label="隐藏">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6l12 12M18 6 6 18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar" id="toolbar" role="toolbar" aria-label="Markdown 快捷输入">
+      <button class="tool-btn" data-action="todo" type="button" title="待办项">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="3.5"/>
+          <path d="M8.4 12.2l2.4 2.4 4.8-4.9"/>
+        </svg>
+      </button>
+      <button class="tool-btn" data-action="ul" type="button" title="无序列表">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 6h11M9 12h11M9 18h11"/>
+          <circle cx="4.6" cy="6" r="1.1" fill="currentColor" stroke="none"/>
+          <circle cx="4.6" cy="12" r="1.1" fill="currentColor" stroke="none"/>
+          <circle cx="4.6" cy="18" r="1.1" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+      <button class="tool-btn" data-action="ol" type="button" title="有序列表">
+        <span class="glyph num">1.</span>
+      </button>
+      <span class="tool-divider" aria-hidden="true"></span>
+      <button class="tool-btn" data-action="bold" type="button" title="加粗">
+        <span class="glyph strong">B</span>
+      </button>
+      <button class="tool-btn" data-action="italic" type="button" title="斜体">
+        <span class="glyph em">I</span>
+      </button>
+      <button class="tool-btn" data-action="strike" type="button" title="删除线">
+        <span class="glyph strike">S</span>
+      </button>
+      <button class="tool-btn" data-action="code" type="button" title="行内代码">
+        <span class="glyph mono">&lt;/&gt;</span>
+      </button>
+    </div>
+
+    <main class="workspace">
+      <textarea id="editor" class="editor" spellcheck="false" autocomplete="off" autocapitalize="off"
+        placeholder="随手记点什么…&#10;用上方工具栏插入待办 / 列表 / 加粗 / 删除线&#10;&#10;Ctrl+Alt+M 随时唤出 · Ctrl+E 预览"></textarea>
+      <article id="preview" class="preview markdown-body" hidden></article>
+      <div class="resize-handle" id="resize-handle" title="拖动调整大小" aria-hidden="true"></div>
+    </main>
+
+    <footer class="statusbar">
+      <div class="status-left">
+        <span class="dot" id="save-dot" aria-hidden="true"></span>
+        <span class="save-text" id="save-text">就绪</span>
+      </div>
+      <div class="status-right">
+        <span class="char-count" id="char-count" title="字数">0 字</span>
+        <div class="mode-switch" role="group" aria-label="编辑模式">
+          <button class="mode-btn active" id="mode-edit" type="button">编辑</button>
+          <button class="mode-btn" id="mode-preview" type="button">预览</button>
+        </div>
+      </div>
+    </footer>
+
+    <section class="settings" id="settings" hidden aria-label="设置">
+      <div class="settings-head">
+        <h2>设置</h2>
+        <button class="icon-btn" id="btn-settings-close" type="button" title="关闭" aria-label="关闭设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6l12 12M18 6 6 18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-name">全局唤出快捷键</span>
+            <span class="setting-desc">在任何应用中按下即可唤出 / 收起</span>
+          </div>
+          <button class="hotkey-btn" id="hotkey-btn" type="button">Ctrl + Alt + M</button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-name">始终置顶</span>
+            <span class="setting-desc">保持最高层级，不被其他窗口遮挡</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="set-ontop">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-name">贴边自动隐藏</span>
+            <span class="setting-desc">拖到屏幕边缘收成细条，鼠标移上去展开</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="set-edge">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-name">编辑字号</span>
+            <span class="setting-desc">正文与预览同步生效</span>
+          </div>
+          <div class="font-seg" id="font-seg">
+            <button type="button" data-size="13">小</button>
+            <button type="button" data-size="15">标准</button>
+            <button type="button" data-size="18">大</button>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-label">
+            <span class="setting-name">背景透明度</span>
+            <span class="setting-desc">越大越通透，可以看到后面的内容</span>
+          </div>
+          <div class="opacity-control">
+            <input type="range" id="set-opacity" min="0" max="45" step="1" value="6" aria-label="背景透明度">
+            <span class="opacity-value" id="opacity-value">6%</span>
+          </div>
+        </div>
+
+        <div class="setting-block">
+          <div class="setting-name">内容存储</div>
+          <p class="setting-desc">正文只写入本机缓存目录，不会生成 .md / .txt 文档；清空时缓存一并删除。</p>
+          <code class="cache-path" id="cache-path">…</code>
+          <button class="text-btn" id="btn-open-cache" type="button">打开缓存目录</button>
+        </div>
+
+        <div class="settings-foot">速记 1.0 · 单页 Markdown 快捷备忘</div>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" hidden>
+      <span id="toast-text"></span>
+      <button class="toast-action" id="toast-action" type="button" hidden>撤销</button>
+    </div>
+
+    <div class="edge-strip" id="edge-strip" title="悬停展开"></div>
+  </div>
+
+  <script src="vendor/marked.min.js"></script>
+  <script src="vendor/purify.min.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
